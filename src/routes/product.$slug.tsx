@@ -53,7 +53,7 @@ function ProductPage() {
           </div>
           {product.images.length > 1 && (
             <div className="mt-3 flex gap-2">
-              {product.images.map((src, i) => (
+              {product.images.map((src: string, i: number) => (
                 <button
                   key={i}
                   onClick={() => setActiveImg(i)}
@@ -120,7 +120,7 @@ function ProductPage() {
           <div className="card-glow rounded-xl p-5">
             <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-primary">Specifications</h3>
             <dl className="grid gap-2 text-sm sm:grid-cols-2">
-              {product.specs.map((s) => (
+              {product.specs.map((s: { label: string; value: string }) => (
                 <div key={s.label} className="flex justify-between gap-3 border-b border-border/50 py-1.5">
                   <dt className="text-muted-foreground">{s.label}</dt>
                   <dd className="font-semibold">{s.value}</dd>
