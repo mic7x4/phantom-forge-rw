@@ -1,0 +1,134 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Minus, Plus, Trash2, ArrowRight, Tag } from "lucide-react";
+import { useState } from "react";
+import { useCart } from "@/lib/cart";
+import { formatRWF } from "@/data/products";
+import { toast } from "sonner";
+
+export const Route = createFileRoute("/cart")({
+  head: () => ({ meta: [{ title: "Your Cart — Net Phantom Store Rwanda" }] }),
+  component: CartPage,
+});
+
+const DELIVERY_KIGALI = 3_000;
+
+function CartPage() {
+  const { detailed, subtotal, setQty, remove, clear, applyCode, discountCode, discount } = useCart();
+  const [code, setCode] = useState(discountCode ?? "");
+  const delivery = detailed.length > 0 ? DELIVERY_KIGALI : 0;
+  const total = Math.max(0, subtotal - discount + delivery);
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <h1 className="font-display text-3xl font-black sm:text-4xl">Your Cart</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{detailed.length} item{detailed.length === 1 ? "" : "s"}</p>
+
+      {detailed.length === 0 ? (
+        <div className="card-glow mt-10 rounded-2xl p-12 text-center">
+          <p className="text-muted-foreground">Your cart is empty.</p>
+          <Link to="/" className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-gradient-brand px-6 text-sm font-bold uppercase tracking-wider text-primary-foreground">
+            Start shopping <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
+          <div className="space-y-3">
+            {detailed.map(({ product, qty }) => (
+              <div key={product.id} className="card-glow flex gap-4 rounded-xl p-4">
+                <Link to="/product/$slug" params={{ slug: product.slug }} className="shrink-0">
+                  <img src={product.image} alt={product.name} loading="lazy" width={120} height={120} className="h-24 w-24 rounded-md object-cover sm:h-28 sm:w-28" />
+                </Link>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold uppercase tracking-widest text-primary">{product.brand}</div>
+                      <Link to="/product/$slug" params={{ slug: product.slug }} className="block truncate text-sm font-semibold hover:text-primary sm:text-base">
+                        {product.name}
+                      </Link>
+                    </div>
+                    <button onClick={() => remove(product.id)} className="shrink-0 rounded-md p-2 text-muted-foreground hover:text-destructive" aria-label="Remove">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="mt-auto flex items-end justify-between gap-3 pt-3">
+                    <div className="inline-flex items-center rounded-md border border-border">
+                      <button onClick={() => setQty(product.id, qty - 1)} className="grid h-9 w-9 place-items-center hover:bg-muted">
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="w-9 text-center text-sm font-bold">{qty}</span>
+                      <button onClick={() => setQty(product.id, qty + 1)} className="grid h-9 w-9 place-items-center hover:bg-muted">
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <div className="font-display text-base font-bold">{formatRWF(product.price * qty)}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button onClick={clear} className="text-xs text-muted-foreground hover:text-destructive">Clear cart</button>
+          </div>
+
+          <aside className="card-glow h-fit space-y-4 rounded-xl p-6">
+            <h2 className="font-display text-lg font-bold">Order summary</h2>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                applyCode(code);
+                const c = code.trim().toUpperCase();
+                if (c === "PHANTOM10" || c === "GAMER5") toast.success("Discount applied");
+                else if (c) toast.error("Invalid code");
+              }}
+              className="flex gap-2"
+            >
+              <div className="relative flex-1">
+                <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={code} onChange={(e) => setCode(e.target.value)}
+                  placeholder="Discount code"
+                  className="h-10 w-full rounded-md border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-primary"
+                />
+              </div>
+              <button className="h-10 rounded-md border border-primary/60 bg-primary/10 px-3 text-xs font-bold uppercase tracking-wider text-primary hover:bg-primary/20">
+                Apply
+              </button>
+            </form>
+            <p className="text-[11px] text-muted-foreground">Try <span className="font-bold text-primary">PHANTOM10</span> for 10% off.</p>
+
+            <div className="space-y-2 border-t border-border pt-4 text-sm">
+              <Row label="Subtotal" value={formatRWF(subtotal)} />
+              {discount > 0 && <Row label={`Discount (${discountCode})`} value={`− ${formatRWF(discount)}`} className="text-emerald-400" />}
+              <Row label="Delivery (Kigali)" value={formatRWF(delivery)} />
+              <div className="my-2 border-t border-border" />
+              <Row label={<span className="font-bold">Total</span>} value={<span className="font-display text-lg font-black text-gradient">{formatRWF(total)}</span>} />
+            </div>
+
+            <button
+              onClick={() => toast.info("Checkout coming soon — payment integration in progress.")}
+              className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-gradient-brand text-sm font-bold uppercase tracking-wider text-primary-foreground glow-blue"
+            >
+              Checkout <ArrowRight className="h-4 w-4" />
+            </button>
+
+            <div className="flex flex-wrap items-center gap-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <span>Pay with</span>
+              <span className="rounded-md border border-border bg-background px-2 py-1">MTN MoMo</span>
+              <span className="rounded-md border border-border bg-background px-2 py-1">Airtel Money</span>
+              <span className="rounded-md border border-border bg-background px-2 py-1">Visa</span>
+              <span className="rounded-md border border-border bg-background px-2 py-1">Mastercard</span>
+            </div>
+          </aside>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Row({ label, value, className }: { label: React.ReactNode; value: React.ReactNode; className?: string }) {
+  return (
+    <div className={`flex items-center justify-between ${className ?? ""}`}>
+      <span className="text-muted-foreground">{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+}
