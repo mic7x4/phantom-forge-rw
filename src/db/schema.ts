@@ -1,7 +1,6 @@
 import {
   boolean,
   integer,
-  numeric,
   pgEnum,
   pgTable,
   text,
@@ -11,76 +10,45 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const userRole = pgEnum("user_role", ["customer", "admin"]);
-export const orderStatus = pgEnum("order_status", [
-  "pending",
-  "confirmed",
-  "processing",
-  "shipped",
-  "delivered",
-  "cancelled",
-]);
-export const paymentStatus = pgEnum("payment_status", [
-  "pending",
-  "paid",
-  "failed",
-  "refunded",
-]);
-export const paymentMethod = pgEnum("payment_method", [
-  "mtn_momo",
-  "airtel_money",
-  "card",
-]);
+export const orderStatus = pgEnum("order_status", ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"]);
+export const paymentStatus = pgEnum("payment_status", ["pending", "paid", "failed", "refunded"]);
+export const paymentMethod = pgEnum("payment_method", ["mtn_momo", "airtel_money", "card"]);
 
-export const users = pgTable(
-  "users",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    email: text("email").notNull(),
-    name: text("name").notNull(),
-    phone: text("phone"),
-    role: userRole("role").notNull().default("customer"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-  },
-  (table) => [uniqueIndex("users_email_idx").on(table.email)],
-);
+export const users = pgTable("users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: text("email").notNull(),
+  name: text("name").notNull(),
+  phone: text("phone"),
+  role: userRole("role").notNull().default("customer"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [uniqueIndex("users_email_idx").on(table.email)]);
 
-export const categories = pgTable(
-  "categories",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    name: text("name").notNull(),
-    slug: text("slug").notNull(),
-    description: text("description"),
-    image: text("image"),
-    active: boolean("active").notNull().default(true),
-  },
-  (table) => [uniqueIndex("categories_slug_idx").on(table.slug)],
-);
+export const categories = pgTable("categories", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
+  description: text("description"),
+  image: text("image"),
+  active: boolean("active").notNull().default(true),
+}, (table) => [uniqueIndex("categories_slug_idx").on(table.slug)]);
 
-export const products = pgTable(
-  "products",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    categoryId: uuid("category_id").references(() => categories.id),
-    name: text("name").notNull(),
-    slug: text("slug").notNull(),
-    brand: text("brand"),
-    description: text("description"),
-    priceRwf: integer("price_rwf").notNull(),
-    compareAtRwf: integer("compare_at_rwf"),
-    sku: text("sku").notNull(),
-    image: text("image"),
-    active: boolean("active").notNull().default(true),
-    featured: boolean("featured").notNull().default(false),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-  },
-  (table) => [
-    uniqueIndex("products_slug_idx").on(table.slug),
-    uniqueIndex("products_sku_idx").on(table.sku),
-  ],
-);
+export const products = pgTable("products", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  categoryId: uuid("category_id").references(() => categories.id),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
+  brand: text("brand"),
+  description: text("description"),
+  priceRwf: integer("price_rwf").notNull(),
+  compareAtRwf: integer("compare_at_rwf"),
+  sku: text("sku").notNull(),
+  image: text("image"),
+  active: boolean("active").notNull().default(true),
+  featured: boolean("featured").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [uniqueIndex("products_slug_idx").on(table.slug), uniqueIndex("products_sku_idx").on(table.sku)]);
 
 export const productImages = pgTable("product_images", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -96,7 +64,7 @@ export const inventory = pgTable("inventory", {
   quantity: integer("quantity").notNull().default(0),
   lowStockThreshold: integer("low_stock_threshold").notNull().default(5),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [uniqueIndex("inventory_product_idx").on(table.productId)]);
 
 export const addresses = pgTable("addresses", {
   id: uuid("id").defaultRandom().primaryKey(),
