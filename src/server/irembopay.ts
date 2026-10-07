@@ -104,7 +104,8 @@ export const createIremboInvoice = createServerFn({ method: "POST" })
         language: "EN",
       });
 
-      const invoiceNumber = invoice?.invoiceNumber ?? invoice?.data?.invoiceNumber;
+      const invoiceData = invoice as unknown as { invoiceNumber?: string; data?: { invoiceNumber?: string } };
+      const invoiceNumber = invoiceData.invoiceNumber ?? invoiceData.data?.invoiceNumber;
       if (!invoiceNumber) throw new Error("IremboPay did not return an invoice number.");
 
       await db.update(payments)
